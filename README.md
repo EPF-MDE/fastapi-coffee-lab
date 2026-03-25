@@ -8,6 +8,10 @@ This project is a demonstration of web programming principles:
 - main technology: FastAPI
 - technical magic: CRUD operations in-memory and template rendering
 
+## Subject
+
+A virtual specialty coffeshop website
+
 ## Setup
 
 Create a virtual environmnent.
