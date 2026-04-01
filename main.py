@@ -1,7 +1,7 @@
 from typing import Annotated
 
-from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request, Form, status, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -51,14 +51,19 @@ def create_coffee(
     name: Annotated[str, Form()],
     price: Annotated[float, Form()],
     is_offer: Annotated[bool, Form()],
+    admin: Annotated[bool, Form()] = None,
 ):
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not admin action",
+        )
+
     coffee = {"name": name, "price": price, "is_offer": is_offer}
 
     coffees.append(coffee)
 
-    response = {"coffee_id": len(coffees) - 1, "coffee": coffee}
-
-    return response
+    return RedirectResponse("/admin", status_code=303)
 
 
 @app.put("/coffees/{coffee_id}")
