@@ -50,7 +50,7 @@ def read_coffee(coffee_id: int, quantity: int | None = None):
 def create_coffee(
     name: Annotated[str, Form()],
     price: Annotated[float, Form()],
-    is_offer: Annotated[bool | None, Form()],
+    is_offer: Annotated[bool, Form()],
 ):
     coffee = {"name": name, "price": price, "is_offer": is_offer}
 
