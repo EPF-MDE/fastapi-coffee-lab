@@ -33,7 +33,12 @@
     <h3>Menu</h3>
     <ul>
       {% for coffee in coffees %}
-      <li>{{coffee.name}}</li>
+      <li>
+        <span>{{coffee.name}} - {{coffee.price}} €&nbsp;</span>
+        {%if coffee.is_offer %}
+        <strong>🎉 SPECIAL OFFER</strong>
+        {%endif%}
+      </li>
       {%endfor%}
     </ul>
     <footer><a href="/admin">Admin</a></footer>
