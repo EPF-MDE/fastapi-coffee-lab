@@ -34,10 +34,16 @@ templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/")
-def show_home(request: Request, admin: int = 0):
+def show_home(request: Request, purchased_coffee: int = None, admin: int = 0):
     coffee_model = PublicCoffee if not admin else Coffee
     validated_coffees = TypeAdapter(list[coffee_model]).validate_python(
         [coffee.model_dump() for coffee in coffees]
+    )
+
+    message = (
+        "Have one, not a hundred! 💯"
+        if purchased_coffee is None
+        else f"Enjoy your {coffees[purchased_coffee].name}! ☺️"
     )
 
     return templates.TemplateResponse(
@@ -45,7 +51,7 @@ def show_home(request: Request, admin: int = 0):
         "index.html",
         context={
             "coffees": validated_coffees,
-            "welcome_message": "Have one, not a hundred!",
+            "message": message,
             "admin": admin,
         },
     )
@@ -122,3 +128,18 @@ def update_coffee_action(
     coffees[id] = coffees[id].model_copy(update=new_coffee.model_dump())
 
     return RedirectResponse("/?admin=1", status_code=303)
+
+
+@app.post("/coffees/{id}/buy")
+def buy_coffee(id: int, admin: int = 0):
+    if admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Coffee is free for you!",
+        )
+
+    coffee = coffees[id]
+
+    coffees[id] = coffee.model_copy(update={"quantity": coffee.quantity - 1})
+
+    return RedirectResponse(f"/?purchased_coffee={id}", status_code=303)

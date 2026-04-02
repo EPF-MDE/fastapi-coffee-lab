@@ -48,10 +48,17 @@
           ({{coffee.quantity}})
           <a class="button" href="/coffees/{{loop.index0}}?admin=1">Edit</a>
         </span>
-        {% else %} {%if not coffee.out_of_stock %}
-        <a class="button" href="/coffees/{{loop.index0}}">Buy</a>
-        {%else%}<i>Out of stock</i>
-        {%endif%} {%endif%}
+        {% else %}
+        <form
+          style="display: inline-block"
+          method="post"
+          action="/coffees/{{loop.index0}}/buy"
+        >
+          <button type="submit" {%if coffee.out_of_stock %}disabled{%endif%}>
+            {%if not coffee.out_of_stock %}Buy{%else%}Out of stock{%endif%}
+          </button>
+        </form>
+        {%endif%}
       </li>
       {%endfor%}
     </ul>
@@ -62,7 +69,7 @@
       <a href="/">Exit admin mode</a>
       {%else%}
       <blockquote>
-        <p>{{welcome_message}}</p>
+        <p>{{message}}</p>
       </blockquote>
       <a href="/?admin=1">Enter admin mode</a>
       {%endif%}
