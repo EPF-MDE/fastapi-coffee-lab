@@ -37,10 +37,23 @@
         <span>{{coffee.name}} - {{coffee.price}} €&nbsp;</span>
         {%if coffee.is_offer %}
         <strong>🎉 SPECIAL OFFER</strong>
+        {%endif%} {%if admin %}
+        <a class="button" href="/coffees/{{loop.index0}}?admin=1">Edit</a>
         {%endif%}
       </li>
       {%endfor%}
     </ul>
-    <footer><a href="/admin">Admin</a></footer>
+    <footer>
+      {%if admin %}
+      <h3>Admin area</h3>
+      <a href="/coffees?admin=1">Add a new coffee to the menu</a>
+      <a href="/">Exit admin mode</a>
+      {%else%}
+      <blockquote>
+        <p>{{welcome_message}}</p>
+      </blockquote>
+      <a href="/?admin=1">Enter admin mode</a>
+      {%endif%}
+    </footer>
   </body>
 </html>

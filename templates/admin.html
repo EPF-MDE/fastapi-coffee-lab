@@ -31,26 +31,43 @@
       <h1>Ephemereal coffeeshop</h1>
     </header>
     <h3>Admin</h3>
-    <form action="/coffees" method="post">
+    <form action="/coffees/{{id|default('')}}?admin=1" method="post">
       <label for="name">Name</label>
-      <input type="text" name="name" />
+      <input type="text" name="name" value="{{coffee.name}}" />
       <label for="price">Price</label>
-      <input type="number" name="price" step="0.1" />
+      <input type="number" name="price" step="0.1" value="{{coffee.price}}" />
       <fieldset>
         <legend>Is Offer?</legend>
         <div>
-          <input type="radio" id="yes" name="is_offer" value="1" />
+          <input
+            type="radio"
+            id="yes"
+            name="is_offer"
+            value="1"
+            checked="{{coffee.is_offer}}"
+          />
           <label for="yes">Yes</label>
         </div>
 
         <div>
-          <input type="radio" id="no" name="is_offer" value="0" checked />
+          <input
+            type="radio"
+            id="no"
+            name="is_offer"
+            value="0"
+            checked="{{not coffee.is_offer}}"
+          />
           <label for="no">No</label>
         </div>
       </fieldset>
-      <input type="hidden" name="admin" value="1" />
-      <button type="submit">Create / Update</button>
+      <button type="submit">
+        {%if not id and id != 0 %}Create{%else%}Edit{%endif%}
+      </button>
     </form>
-    <footer><a href="/">Menu</a></footer>
+    <footer>
+      <h3>Admin area</h3>
+      <a href="/">Menu (anonymous view)</a>
+      <a href="/?admin=1">Menu (admin view)</a>
+    </footer>
   </body>
 </html>

@@ -24,34 +24,54 @@ templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-def show_home(request: Request):
+def show_home(request: Request, admin: int = 0):
     return templates.TemplateResponse(
         request,
         "index.html",
-        context={"coffees": coffees, "welcome_message": "Have one, not a hundred!"},
+        context={
+            "coffees": coffees,
+            "welcome_message": "Have one, not a hundred!",
+            "admin": admin,
+        },
     )
 
 
-@app.get("/admin", response_class=HTMLResponse)
-def show_admin(request: Request):
+@app.get("/coffees")
+def create_coffee_page(request: Request, admin: int = 0):
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not admin action",
+        )
+
     return templates.TemplateResponse(
         request,
         "admin.html",
-        context={"coffees": coffees},
+        context={"coffee": {}},
     )
 
 
-@app.get("/coffees/{coffee_id}")
-def read_coffee(coffee_id: int, quantity: int | None = None):
-    return {"coffee_id": coffee_id, "coffee": coffees[coffee_id], "quantity": quantity}
+@app.get("/coffees/{id}")
+def update_coffee_page(request: Request, id: int = None, admin: int = 0):
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not admin action",
+        )
+
+    return templates.TemplateResponse(
+        request,
+        "admin.html",
+        context={"coffee": coffees[id], "id": id},
+    )
 
 
 @app.post("/coffees")
-def create_coffee(
+def create_coffee_action(
     name: Annotated[str, Form()],
     price: Annotated[float, Form()],
     is_offer: Annotated[bool, Form()],
-    admin: Annotated[bool, Form()] = None,
+    admin: int = 0,
 ):
     if not admin:
         raise HTTPException(
@@ -63,19 +83,29 @@ def create_coffee(
 
     coffees.append(coffee)
 
-    return RedirectResponse("/admin", status_code=303)
+    return RedirectResponse("/?admin=1", status_code=303)
 
 
-@app.put("/coffees/{coffee_id}")
-def update_coffee(coffee_id: int, coffee: Coffee):
-    # print("coffees", coffees)
+@app.post("/coffees/{id}")
+def update_coffee_action(
+    id: int,
+    name: Annotated[str, Form()],
+    price: Annotated[float, Form()],
+    is_offer: Annotated[bool, Form()],
+    admin: int = 0,
+):
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not admin action",
+        )
 
-    coffees[coffee_id].update(coffee)
+    new_coffee = {
+        "name": name,
+        "price": price,
+        "is_offer": is_offer,
+    }
 
-    # print("coffees[coffee_id]", coffees[coffee_id])
+    coffees[id].update(new_coffee)
 
-    response = {"coffee_name": coffees[coffee_id]["name"], "coffee_id": coffee_id}
-
-    # print("response", response)
-
-    return response
+    return RedirectResponse("/?admin=1", status_code=303)
