@@ -140,6 +140,16 @@ def buy_coffee(id: int, admin: int = 0):
 
     coffee = coffees[id]
 
-    coffees[id] = coffee.model_copy(update={"quantity": coffee.quantity - 1})
+    new_quantity = coffee.quantity - 1
+
+    if new_quantity < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Already out of stock, cannot buy that coffee!",
+        )
+
+    new_coffee = coffee.model_copy(update={"quantity": new_quantity})
+
+    coffees[id] = new_coffee
 
     return RedirectResponse(f"/?purchased_coffee={id}", status_code=303)
