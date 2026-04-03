@@ -122,7 +122,7 @@ def update_coffee_page(
     return templates.TemplateResponse(
         request,
         "admin.html",
-        context={"coffee": coffee, "id": coffee.id, "admin": admin},
+        context={"coffee": coffee, "admin": admin},
     )
 
 

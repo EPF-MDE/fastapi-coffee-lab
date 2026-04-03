@@ -1,6 +1,6 @@
 {% extends "base.html" %} {%block title%}Admin{%endblock%}{%block header%}{%if
 id%}Edit{%else%}Create{%endif%} coffee{%endblock%} {%block content%}
-<form action="/coffees/{{id|default('')}}?admin=1" method="post">
+<form action="/coffees/{{coffee.id|default('')}}?admin=1" method="post">
   <label for="name">Name</label>
   <input id="name" type="text" name="name" value="{{coffee.name}}" />
   <label for="price">Price</label>
@@ -43,9 +43,7 @@ id%}Edit{%else%}Create{%endif%} coffee{%endblock%} {%block content%}
       <label for="no">No</label>
     </div>
   </fieldset>
-  <button type="submit">
-    {%if not id and id != 0 %}Create{%else%}Edit{%endif%}
-  </button>
+  <button type="submit">{%if not coffee %}Create{%else%}Edit{%endif%}</button>
 </form>
 {%endblock%} {%block footer%} {%if admin%}
 <a href="/">Menu (anonymous view)</a>
