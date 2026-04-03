@@ -35,7 +35,7 @@
     <ul>
       {% for coffee in coffees %}
       <li>
-        {%if coffee.out_of_stock %}
+        {%if coffee.quantity == 0 %}
         <del>
           <span>{{coffee.name}} - {{coffee.price}} €</span>
           {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
@@ -47,17 +47,19 @@
         {%endif%} {%endif%} {%if admin %}
         <span>
           ({{coffee.quantity}})
-          <a class="button" href="/coffees/{{loop.index0}}?admin=1">Edit</a>
+          <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
         </span>
         {% else %}
         <form
           style="display: inline-block"
           method="post"
-          action="/coffees/{{loop.index0}}/buy"
+          action="/coffees/{{loop.index}}/buy"
         >
-          <button type="submit" {%if coffee.out_of_stock %}disabled{%endif%}>
-            {%if not coffee.out_of_stock %}Buy{%else%}Out of stock{%endif%}
-          </button>
+          {%if coffee.quantity == 0 %}
+          <button disabled>Out of stock</button>
+          {%else%}
+          <button type="submit">Buy</button>
+          {%endif%}
         </form>
         {%endif%}
       </li>
