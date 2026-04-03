@@ -1,81 +1,43 @@
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Menu - Ephemereal Coffeeshop</title>
-
-    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
-
-    <style>
-      @media (prefers-color-scheme: dark) {
-        :root {
-          color-scheme: light;
-          --bg: #fff;
-          --accent-bg: #f5f7ff;
-          --text: #212121;
-          --text-light: #585858;
-          --accent: #0d47a1;
-          --accent-hover: #1266e2;
-          --accent-text: var(--bg);
-          --code: #d81b60;
-          --preformatted: #444;
-          --marked: #ffdd33;
-          --disabled: #efefef;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <header>
-      <h1>Ephemereal coffeeshop</h1>
-      <div>You have {{money}}€ in pocket</div>
-    </header>
-    <h3>Menu</h3>
-    <ul>
-      {% for coffee in coffees %}
-      <li>
-        {%if coffee.quantity == 0 %}
-        <del>
-          <span>{{coffee.name}} - {{coffee.price}} €</span>
-          {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
-          {%endif%}
-        </del>
-        {%else%}
-        <span>{{coffee.name}} - {{coffee.price}} €</span>
-        {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
-        {%endif%} {%endif%} {%if admin %}
-        <span>
-          ({{coffee.quantity}})
-          <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
-        </span>
-        {% else %}
-        <form
-          style="display: inline-block"
-          method="post"
-          action="/coffees/{{loop.index}}/buy"
-        >
-          {%if coffee.quantity == 0 %}
-          <button disabled>Out of stock</button>
-          {%else%}
-          <button type="submit">Buy</button>
-          {%endif%}
-        </form>
-        {%endif%}
-      </li>
-      {%endfor%}
-    </ul>
-    <footer>
-      {%if admin %}
-      <h3>Admin area</h3>
-      <a href="/coffees?admin=1">Add a new coffee to the menu</a>
-      <a href="/">Exit admin mode</a>
-      {%else%}
-      <blockquote>
-        <p>{{message}}</p>
-      </blockquote>
-      <a href="/?admin=1">Enter admin mode</a>
+{% extends "base.html" %} {%block title%}Menu{%endblock%} {%block
+header%}Virtual coffeeshop{%endblock%} {%block content%}
+<h3>Menu</h3>
+<div>You have {{money}}€ in pocket</div>
+<ul>
+  {% for coffee in coffees %}
+  <li>
+    {%if coffee.quantity == 0 %}
+    <del>
+      <span>{{coffee.name}} - {{coffee.price}} €</span>
+      {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
       {%endif%}
-    </footer>
-  </body>
-</html>
+    </del>
+    {%else%}
+    <span>{{coffee.name}} - {{coffee.price}} €</span>
+    {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
+    {%endif%} {%endif%} {%if admin %}
+    <span>
+      ({{coffee.quantity}})
+      <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
+    </span>
+    {% else %}
+    <form
+      style="display: inline-block"
+      method="post"
+      action="/coffees/{{loop.index}}/buy"
+    >
+      {%if coffee.quantity == 0 %}
+      <button disabled>Out of stock</button>
+      {%else%}
+      <button type="submit">Buy</button>
+      {%endif%}
+    </form>
+    {%endif%}
+  </li>
+  {%endfor%}
+</ul>
+{%endblock%} {%block footer%} {%if admin%}
+<a href="/coffees?admin=1">Add a new coffee to the menu</a>
+<a href="/">Exit admin mode</a>
+{%else%}
+<a href="/?admin=1">Enter admin mode</a>
+{%endif%}{%endblock%}

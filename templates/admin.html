@@ -1,87 +1,53 @@
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin - Ephemereal Coffeeshop</title>
-
-    <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
-
-    <style>
-      @media (prefers-color-scheme: dark) {
-        :root {
-          color-scheme: light;
-          --bg: #fff;
-          --accent-bg: #f5f7ff;
-          --text: #212121;
-          --text-light: #585858;
-          --accent: #0d47a1;
-          --accent-hover: #1266e2;
-          --accent-text: var(--bg);
-          --code: #d81b60;
-          --preformatted: #444;
-          --marked: #ffdd33;
-          --disabled: #efefef;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <header>
-      <h1>Ephemereal coffeeshop</h1>
-    </header>
-    <h3>Admin</h3>
-    <form action="/coffees/{{id|default('')}}?admin=1" method="post">
-      <label for="name">Name</label>
-      <input id="name" type="text" name="name" value="{{coffee.name}}" />
-      <label for="price">Price</label>
+{% extends "base.html" %} {%block title%}Admin{%endblock%}{%block header%}{%if
+id%}Edit{%else%}Create{%endif%} coffee{%endblock%} {%block content%}
+<form action="/coffees/{{id|default('')}}?admin=1" method="post">
+  <label for="name">Name</label>
+  <input id="name" type="text" name="name" value="{{coffee.name}}" />
+  <label for="price">Price</label>
+  <input
+    id="price"
+    type="number"
+    name="price"
+    step="0.1"
+    value="{{coffee.price}}"
+  />
+  <label for="quantity">Quantity</label>
+  <input
+    id="quantity"
+    type="number"
+    name="quantity"
+    step="1"
+    value="{{coffee.quantity}}"
+  />
+  <fieldset>
+    <legend>Is Offer?</legend>
+    <div>
       <input
-        id="price"
-        type="number"
-        name="price"
-        step="0.1"
-        value="{{coffee.price}}"
+        type="radio"
+        id="yes"
+        name="is_offer"
+        value="1"
+        checked="{{coffee.is_offer}}"
       />
-      <label for="quantity">Quantity</label>
-      <input
-        id="quantity"
-        type="number"
-        name="quantity"
-        step="1"
-        value="{{coffee.quantity}}"
-      />
-      <fieldset>
-        <legend>Is Offer?</legend>
-        <div>
-          <input
-            type="radio"
-            id="yes"
-            name="is_offer"
-            value="1"
-            checked="{{coffee.is_offer}}"
-          />
-          <label for="yes">Yes</label>
-        </div>
+      <label for="yes">Yes</label>
+    </div>
 
-        <div>
-          <input
-            type="radio"
-            id="no"
-            name="is_offer"
-            value="0"
-            checked="{{not coffee.is_offer}}"
-          />
-          <label for="no">No</label>
-        </div>
-      </fieldset>
-      <button type="submit">
-        {%if not id and id != 0 %}Create{%else%}Edit{%endif%}
-      </button>
-    </form>
-    <footer>
-      <h3>Admin area</h3>
-      <a href="/">Menu (anonymous view)</a>
-      <a href="/?admin=1">Menu (admin view)</a>
-    </footer>
-  </body>
-</html>
+    <div>
+      <input
+        type="radio"
+        id="no"
+        name="is_offer"
+        value="0"
+        checked="{{not coffee.is_offer}}"
+      />
+      <label for="no">No</label>
+    </div>
+  </fieldset>
+  <button type="submit">
+    {%if not id and id != 0 %}Create{%else%}Edit{%endif%}
+  </button>
+</form>
+{%endblock%} {%block footer%} {%if admin%}
+<a href="/">Menu (anonymous view)</a>
+<a href="/?admin=1">Menu (admin view)</a>
+{%endif%}{%endblock%}
