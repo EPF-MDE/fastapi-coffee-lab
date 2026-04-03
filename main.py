@@ -1,10 +1,13 @@
 from typing import Annotated
+import os
 
-
-from fastapi import Depends, FastAPI, Request, Form, status, HTTPException, Query
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, Request, Form, status, HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Field, Session, SQLModel, create_engine, select
+
+load_dotenv()
 
 
 class CoffeeBase(SQLModel):
@@ -34,11 +37,8 @@ def make_money():
 
 get_money, set_money = make_money()
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
 connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+engine = create_engine(os.environ.get("SQLITE_URL"), connect_args=connect_args)
 
 
 def create_db_and_tables():
