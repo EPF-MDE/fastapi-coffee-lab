@@ -1,34 +1,21 @@
 from typing import Annotated
 
-from fastapi import FastAPI, Request, Form, status, HTTPException
+
+from fastapi import Depends, FastAPI, Request, Form, status, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, computed_field, TypeAdapter
-
-app = FastAPI()
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 
-class Coffee(BaseModel):
-    name: str
+class CoffeeBase(SQLModel):
+    name: str = Field(index=True)
     price: float
-    quantity: int = Field(gte=0)
-    is_offer: bool | None = None
+    is_offer: bool | None = Field(default=None, index=True)
 
 
-class PublicCoffee(Coffee):
-    quantity: int = Field(gte=0, exclude=True)
-
-    @computed_field
-    @property
-    def out_of_stock(self) -> bool:
-        return self.quantity == 0
-
-
-coffees: list[Coffee]
-coffees = [
-    Coffee(name="Espresso", price=1.0, is_offer=True, quantity=2),
-    Coffee(name="Latte", price=3.0, is_offer=False, quantity=5),
-]
+class Coffee(CoffeeBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    quantity: int = Field(gt=0)
 
 
 def make_money():
@@ -47,27 +34,54 @@ def make_money():
 
 get_money, set_money = make_money()
 
+sqlite_file_name = "database.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+connect_args = {"check_same_thread": False}
+engine = create_engine(sqlite_url, connect_args=connect_args)
+
+
+def create_db_and_tables():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
+SessionDep = Annotated[Session, Depends(get_session)]
+
+app = FastAPI()
+
 templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/")
-def show_home(request: Request, purchased_coffee: int = None, admin: int = 0):
-    coffee_model = PublicCoffee if not admin else Coffee
-    validated_coffees = TypeAdapter(list[coffee_model]).validate_python(
-        [coffee.model_dump() for coffee in coffees]
-    )
+@app.on_event("startup")
+def on_startup():
+    create_db_and_tables()
 
-    message = (
-        "Have one, not a hundred! 💯"
-        if purchased_coffee is None
-        else f"Enjoy your {coffees[purchased_coffee].name}! ☺️"
-    )
+
+@app.get("/")
+def show_home(
+    request: Request,
+    session: SessionDep,
+    purchased_coffee_id: int = None,
+    admin: int = 0,
+):
+    coffees = session.exec(select(Coffee)).all()
+
+    message = "Have one, not a hundred! 💯"
+
+    if purchased_coffee_id:
+        purchased_coffee = session.get(Coffee, purchased_coffee_id)
+        message = f"Enjoy your {purchased_coffee.name}! ☺️"
 
     return templates.TemplateResponse(
         request,
         "index.html",
         context={
-            "coffees": validated_coffees,
+            "coffees": coffees,
             "message": message,
             "money": get_money(),
             "admin": admin,
@@ -91,22 +105,30 @@ def create_coffee_page(request: Request, admin: int = 0):
 
 
 @app.get("/coffees/{id}")
-def update_coffee_page(request: Request, id: int = None, admin: int = 0):
+def update_coffee_page(
+    request: Request, session: SessionDep, id: int = None, admin: int = 0
+):
     if not admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not admin action",
         )
 
+    coffee = session.get(Coffee, id)
+
+    if not coffee:
+        raise HTTPException(status_code=404, detail="Coffee not found")
+
     return templates.TemplateResponse(
         request,
         "admin.html",
-        context={"coffee": coffees[id], "id": id},
+        context={"coffee": coffee, "id": coffee.id},
     )
 
 
 @app.post("/coffees")
 def create_coffee_action(
+    session: SessionDep,
     name: Annotated[str, Form()],
     price: Annotated[float, Form()],
     is_offer: Annotated[bool, Form()],
@@ -121,13 +143,16 @@ def create_coffee_action(
 
     coffee = Coffee(name=name, price=price, is_offer=is_offer, quantity=quantity)
 
-    coffees.append(coffee)
+    session.add(coffee)
+    session.commit()
+    session.refresh(coffee)
 
     return RedirectResponse("/?admin=1", status_code=303)
 
 
 @app.post("/coffees/{id}")
 def update_coffee_action(
+    session: SessionDep,
     id: int,
     name: Annotated[str, Form()],
     price: Annotated[float, Form()],
@@ -143,23 +168,34 @@ def update_coffee_action(
 
     new_coffee = Coffee(name=name, price=price, is_offer=is_offer, quantity=quantity)
 
-    coffees[id] = coffees[id].model_copy(update=new_coffee.model_dump())
+    coffee_db = session.get(Coffee, id)
+    if not coffee_db:
+        raise HTTPException(status_code=404, detail="Coffee not found")
+
+    coffee_data = new_coffee.model_dump(exclude_unset=True)
+    coffee_db.sqlmodel_update(coffee_data)
+    session.add(coffee_db)
+    session.commit()
+    session.refresh(coffee_db)
 
     return RedirectResponse("/?admin=1", status_code=303)
 
 
 @app.post("/coffees/{id}/buy")
-def buy_coffee(id: int, admin: int = 0):
+def buy_coffee(session: SessionDep, id: int, admin: int = 0):
     if admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Coffee is free for you!",
         )
 
-    coffee = coffees[id]
+    coffee_db = session.get(Coffee, id)
+
+    if not coffee_db:
+        raise HTTPException(status_code=404, detail="Coffee not found")
 
     money = get_money()
-    new_money = money - coffee.price
+    new_money = money - coffee_db.price
 
     if new_money < 0:
         raise HTTPException(
@@ -167,7 +203,7 @@ def buy_coffee(id: int, admin: int = 0):
             detail="Not enough money for that coffee! We can offer a glass of water instead...",
         )
 
-    new_quantity = coffee.quantity - 1
+    new_quantity = coffee_db.quantity - 1
 
     if new_quantity < 0:
         raise HTTPException(
@@ -177,8 +213,12 @@ def buy_coffee(id: int, admin: int = 0):
 
     set_money(new_money)
 
-    new_coffee = coffee.model_copy(update={"quantity": new_quantity})
+    new_coffee = Coffee(quantity=new_quantity)
 
-    coffees[id] = new_coffee
+    coffee_data = new_coffee.model_dump(exclude_unset=True)
+    coffee_db.sqlmodel_update(coffee_data)
+    session.add(coffee_db)
+    session.commit()
+    session.refresh(coffee_db)
 
-    return RedirectResponse(f"/?purchased_coffee={id}", status_code=303)
+    return RedirectResponse(f"/?purchased_coffee_id={id}", status_code=303)
