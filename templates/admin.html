@@ -33,9 +33,23 @@
     <h3>Admin</h3>
     <form action="/coffees/{{id|default('')}}?admin=1" method="post">
       <label for="name">Name</label>
-      <input type="text" name="name" value="{{coffee.name}}" />
+      <input id="name" type="text" name="name" value="{{coffee.name}}" />
       <label for="price">Price</label>
-      <input type="number" name="price" step="0.1" value="{{coffee.price}}" />
+      <input
+        id="price"
+        type="number"
+        name="price"
+        step="0.1"
+        value="{{coffee.price}}"
+      />
+      <label for="quantity">Quantity</label>
+      <input
+        id="quantity"
+        type="number"
+        name="quantity"
+        step="1"
+        value="{{coffee.quantity}}"
+      />
       <fieldset>
         <legend>Is Offer?</legend>
         <div>
