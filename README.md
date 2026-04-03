@@ -6,7 +6,7 @@ This project is a demonstration of web programming principles:
 
 - language: Python
 - main technology: FastAPI
-- technical magic: CRUD operations in-memory and template rendering
+- technical magic: CRUD operations in SQLite DB and template rendering
 
 ## Subject
 
