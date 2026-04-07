@@ -42,7 +42,7 @@ def make_money():
 get_money, set_money = make_money()
 
 connect_args = {"check_same_thread": False}
-engine = create_engine(os.environ.get("SQLITE_URL"), connect_args=connect_args)
+engine = create_engine(os.environ.get("DATABASE_URL"), connect_args=connect_args)
 
 
 def create_db_and_tables():
