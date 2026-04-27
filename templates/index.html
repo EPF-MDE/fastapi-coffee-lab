@@ -2,39 +2,7 @@
 header%}Virtual coffeeshop{%endblock%} {%block content%}
 <h3>Menu</h3>
 <div>You have {{money}}€ in pocket</div>
-<ul>
-  {% for coffee in coffees %}
-  <li>
-    {%if coffee.quantity == 0 %}
-    <del>
-      <span>{{coffee.name}} - {{coffee.price}} €</span>
-      {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
-      {%endif%}
-    </del>
-    {%else%}
-    <span>{{coffee.name}} - {{coffee.price}} €</span>
-    {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
-    {%endif%} {%endif%} {%if admin %}
-    <span>
-      ({{coffee.quantity}})
-      <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
-    </span>
-    {% else %}
-    <form
-      style="display: inline-block"
-      method="post"
-      action="/coffees/{{loop.index}}/buy"
-    >
-      {%if coffee.quantity == 0 %}
-      <button disabled>Out of stock</button>
-      {%else%}
-      <button type="submit">Buy</button>
-      {%endif%}
-    </form>
-    {%endif%}
-  </li>
-  {%endfor%}
-</ul>
+<ul id="coffees" hx-get="/coffees" hx-swap="innerHTML" hx-trigger="load"></ul>
 {%endblock%} {%block footer%} {%if admin%}
 <a href="/coffees?admin=1">Add a new coffee to the menu</a>
 <a href="/">Exit admin mode</a>
