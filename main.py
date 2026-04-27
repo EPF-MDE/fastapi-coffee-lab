@@ -1,5 +1,7 @@
 from typing import Annotated, Union
 import os
+import time
+
 
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
@@ -102,6 +104,8 @@ def create_coffee_page(
 ):
     if hx_request:
         coffees = session.exec(select(Coffee)).all()
+
+        time.sleep(3)
 
         return templates.TemplateResponse(
             request=request, name="coffees.html", context={"coffees": coffees}
