@@ -1,9 +1,9 @@
-from typing import Annotated
+from typing import Annotated, Union
 import os
 
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Request, Form, status, HTTPException
+from fastapi import Depends, FastAPI, Request, Form, status, HTTPException, Header
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Field, Session, SQLModel, create_engine, select
@@ -76,8 +76,6 @@ def show_home(
     purchased_coffee_id: int = None,
     admin: int = 0,
 ):
-    coffees = session.exec(select(Coffee)).all()
-
     message = "Have one, not a hundred! 💯"
 
     if purchased_coffee_id:
@@ -88,7 +86,6 @@ def show_home(
         request,
         "index.html",
         context={
-            "coffees": coffees,
             "message": message,
             "money": get_money(),
             "admin": admin,
@@ -97,7 +94,19 @@ def show_home(
 
 
 @app.get("/coffees")
-def create_coffee_page(request: Request, admin: int = 0):
+def create_coffee_page(
+    request: Request,
+    session: SessionDep,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+    admin: int = 0,
+):
+    if hx_request:
+        coffees = session.exec(select(Coffee)).all()
+
+        return templates.TemplateResponse(
+            request=request, name="coffees.html", context={"coffees": coffees}
+        )
+
     if not admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
