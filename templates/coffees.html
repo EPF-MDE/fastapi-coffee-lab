@@ -15,15 +15,17 @@
     <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
   </span>
   {% else %}
-  <form
-    style="display: inline-block"
-    method="post"
-    action="/coffees/{{loop.index}}/buy"
-  >
+  <form style="display: inline-block">
     {%if coffee.quantity == 0 %}
     <button disabled>Out of stock</button>
     {%else%}
-    <button type="submit">Buy</button>
+    <button
+      type="submit"
+      hx-post="/coffees/{{loop.index}}/buy"
+      hx-target="#message"
+    >
+      Buy
+    </button>
     {%endif%}
   </form>
   {%endif%}

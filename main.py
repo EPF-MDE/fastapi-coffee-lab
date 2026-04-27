@@ -71,20 +71,12 @@ def on_startup():
 @app.get("/")
 def show_home(
     request: Request,
-    purchased_coffee_id: int = None,
     admin: int = 0,
 ):
-    message = "Have one, not a hundred! 💯"
-
-    if purchased_coffee_id:
-        purchased_coffee = session.get(Coffee, purchased_coffee_id)
-        message = f"Enjoy your {purchased_coffee.name}! ☺️"
-
     return templates.TemplateResponse(
         request,
         "index.html",
         context={
-            "message": message,
             "money": get_money(),
             "admin": admin,
         },
@@ -196,7 +188,12 @@ def update_coffee_action(
 
 
 @app.post("/coffees/{id}/buy")
-def buy_coffee(session: SessionDep, id: int, admin: int = 0):
+def buy_coffee(
+    session: SessionDep,
+    id: int,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+    admin: int = 0,
+):
     if admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -212,10 +209,12 @@ def buy_coffee(session: SessionDep, id: int, admin: int = 0):
     new_money = money - coffee_db.price
 
     if new_money < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Not enough money for that coffee! We can offer a glass of water instead...",
-        )
+        message = "Not enough money! We can offer a glass of water instead... 🚰"
+
+        if hx_request:
+            return message
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
     new_quantity = coffee_db.quantity - 1
 
@@ -232,4 +231,4 @@ def buy_coffee(session: SessionDep, id: int, admin: int = 0):
     session.commit()
     session.refresh(coffee_db)
 
-    return RedirectResponse(f"/?purchased_coffee_id={id}", status_code=303)
+    return f"Enjoy your {coffee_db.name}! ☺️"
