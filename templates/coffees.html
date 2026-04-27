@@ -1,0 +1,33 @@
+{% for coffee in coffees %}
+<li>
+  {%if coffee.quantity == 0 %}
+  <del>
+    <span>{{coffee.name}} - {{coffee.price}} €</span>
+    {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
+    {%endif%}
+  </del>
+  {%else%}
+  <span>{{coffee.name}} - {{coffee.price}} €</span>
+  {%if coffee.is_offer %} &nbsp;<strong>🎉 SPECIAL OFFER</strong>
+  {%endif%} {%endif%} {%if admin %}
+  <span>
+    ({{coffee.quantity}})
+    <a class="button" href="/coffees/{{loop.index}}?admin=1">Edit</a>
+  </span>
+  {% else %}
+  <form style="display: inline-block">
+    {%if coffee.quantity == 0 %}
+    <button disabled>Out of stock</button>
+    {%else%}
+    <button
+      type="submit"
+      hx-post="/coffees/{{loop.index}}/buy"
+      hx-target="#message"
+    >
+      Buy
+    </button>
+    {%endif%}
+  </form>
+  {%endif%}
+</li>
+{%endfor%}

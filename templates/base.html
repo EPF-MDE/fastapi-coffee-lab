@@ -5,6 +5,7 @@
     <title>{%block title%}{%endblock%} - Ephemereal Coffeeshop</title>
 
     <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+    <script src="https://unpkg.com/htmx.org@2.0.10/dist/htmx.min.js"></script>
 
     <style>
       @media (prefers-color-scheme: dark) {
@@ -33,7 +34,9 @@
     <div>{%block content%}{%endblock%}</div>
     <footer>
       <blockquote>
-        <p>{%if admin %}Admin mode ⚒️{%else%}{{message}}{%endif%}</p>
+        <p id="message">
+          {%if admin %}Admin mode ⚒️{%else%}Have one, not a hundred! 💯{%endif%}
+        </p>
       </blockquote>
       {%block footer%}{%endblock%}
     </footer>
