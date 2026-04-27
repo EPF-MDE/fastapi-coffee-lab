@@ -105,7 +105,9 @@ def create_coffee_page(
         time.sleep(3)
 
         return templates.TemplateResponse(
-            request=request, name="coffees.html", context={"coffees": coffees}
+            request=request,
+            name="coffees.html",
+            context={"coffees": coffees, "admin": admin},
         )
 
     if not admin:
