@@ -71,7 +71,6 @@ def on_startup():
 @app.get("/")
 def show_home(
     request: Request,
-    session: SessionDep,
     purchased_coffee_id: int = None,
     admin: int = 0,
 ):
