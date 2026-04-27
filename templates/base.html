@@ -34,7 +34,9 @@
     <div>{%block content%}{%endblock%}</div>
     <footer>
       <blockquote>
-        <p>{%if admin %}Admin mode ⚒️{%else%}{{message}}{%endif%}</p>
+        <p id="message">
+          {%if admin %}Admin mode ⚒️{%else%}Have one, not a hundred! 💯{%endif%}
+        </p>
       </blockquote>
       {%block footer%}{%endblock%}
     </footer>
