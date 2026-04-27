@@ -2,7 +2,9 @@
 header%}Virtual coffeeshop{%endblock%} {%block content%}
 <h3>Menu</h3>
 <div>You have {{money}}€ in pocket</div>
-<ul id="coffees" hx-get="/coffees" hx-swap="innerHTML" hx-trigger="load"></ul>
+<ul id="coffees" hx-get="/coffees" hx-swap="innerHTML" hx-trigger="load">
+  <li class="htmx-indicator">Loading...</li>
+</ul>
 {%endblock%} {%block footer%} {%if admin%}
 <a href="/coffees?admin=1">Add a new coffee to the menu</a>
 <a href="/">Exit admin mode</a>

@@ -1,5 +1,7 @@
 from typing import Annotated, Union
 import os
+import time
+
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Request, Form, status, HTTPException, Header
@@ -99,6 +101,8 @@ def create_coffee_page(
 ):
     if hx_request:
         coffees = session.exec(select(Coffee)).all()
+
+        time.sleep(3)
 
         return templates.TemplateResponse(
             request=request, name="coffees.html", context={"coffees": coffees}
