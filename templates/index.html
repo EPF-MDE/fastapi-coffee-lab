@@ -2,6 +2,7 @@
 header%}Virtual coffeeshop{%endblock%} {%block content%}
 <h3>Menu</h3>
 <div>You have {{money}}€ in pocket</div>
+{% if not coffees %}
 <ul
   id="coffees"
   hx-get="/coffees?admin={{admin}}"
@@ -12,7 +13,8 @@ header%}Virtual coffeeshop{%endblock%} {%block content%}
     <img style="width: 25%" src="static/coffee-break.gif" alt="Loading..." />
   </li>
 </ul>
-{%endblock%} {%block footer%} {%if admin%}
+{%else%} {% include "coffees.html" %} {%endif%} {%endblock%} {%block footer%}
+{%if admin%}
 <a href="/coffees?admin=1">Add a new coffee to the menu</a>
 <a href="/">Exit admin mode</a>
 {%else%}

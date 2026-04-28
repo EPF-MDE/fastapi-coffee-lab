@@ -195,6 +195,7 @@ def update_coffee_action(
 
 @app.post("/coffees/{id}/buy")
 def buy_coffee(
+    request: Request,
     session: SessionDep,
     id: int,
     hx_request: Annotated[Union[str, None], Header()] = None,
@@ -218,7 +219,18 @@ def buy_coffee(
         message = "Not enough money! We can offer a glass of water instead... 🚰"
 
         if hx_request:
-            return message
+            coffees = session.exec(select(Coffee)).all()
+
+            return templates.TemplateResponse(
+                request,
+                "index.html",
+                context={
+                    "money": money,
+                    "admin": admin,
+                    "coffees": coffees,
+                    "message": message,
+                },
+            )
         else:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
@@ -237,4 +249,24 @@ def buy_coffee(
     session.commit()
     session.refresh(coffee_db)
 
-    return f"Enjoy your {coffee_db.name}! ☺️"
+    message = f"<strong>Enjoy your {coffee_db.name}! ☺️</strong>"
+
+    if hx_request:
+        # data to update the menu
+        coffees = session.exec(select(Coffee)).all()
+
+        # data to update the money
+        money = get_money()
+
+        return templates.TemplateResponse(
+            request,
+            "index.html",
+            context={
+                "money": get_money(),
+                "admin": admin,
+                "coffees": coffees,
+                "message": message,
+            },
+        )
+
+    return message
