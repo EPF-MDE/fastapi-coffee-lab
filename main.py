@@ -169,8 +169,8 @@ def update_coffee_action(
     if not coffee_db:
         raise HTTPException(status_code=404, detail="Coffee not found")
 
-    # Convert 1/0 to True/False
-    data.is_offer = bool(data.is_offer)
+    # Convert "1"/"0" (HTML form-data string) to 1/0 (interger) to True/False (boolean)
+    data.is_offer = bool(int(data.is_offer))
 
     coffee_data = data.model_dump(exclude_unset=True)
     coffee_db.sqlmodel_update(coffee_data)
