@@ -8,7 +8,9 @@ header%}Virtual coffeeshop{%endblock%} {%block content%}
   hx-swap="innerHTML"
   hx-trigger="load"
 >
-  <li class="htmx-indicator">Loading...</li>
+  <li style="list-style-type: none" class="htmx-indicator">
+    <img style="width: 25%" src="static/coffee-break.gif" alt="Loading..." />
+  </li>
 </ul>
 {%endblock%} {%block footer%} {%if admin%}
 <a href="/coffees?admin=1">Add a new coffee to the menu</a>
