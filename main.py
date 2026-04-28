@@ -1,10 +1,13 @@
-from typing import Annotated
+from typing import Annotated, Union
 import os
+import time
+
 
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, Request, Form, status, HTTPException
+from fastapi import Depends, FastAPI, Request, Form, status, HTTPException, Header
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
@@ -66,30 +69,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/")
 def show_home(
     request: Request,
-    session: SessionDep,
-    purchased_coffee_id: int = None,
     admin: int = 0,
 ):
-    coffees = session.exec(select(Coffee)).all()
-
-    message = "Have one, not a hundred! 💯"
-
-    if purchased_coffee_id:
-        purchased_coffee = session.get(Coffee, purchased_coffee_id)
-        message = f"Enjoy your {purchased_coffee.name}! ☺️"
-
     return templates.TemplateResponse(
         request,
         "index.html",
         context={
-            "coffees": coffees,
-            "message": message,
             "money": get_money(),
             "admin": admin,
         },
@@ -97,7 +90,23 @@ def show_home(
 
 
 @app.get("/coffees")
-def create_coffee_page(request: Request, admin: int = 0):
+def create_coffee_page(
+    request: Request,
+    session: SessionDep,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+    admin: int = 0,
+):
+    if hx_request:
+        coffees = session.exec(select(Coffee)).all()
+
+        time.sleep(3)
+
+        return templates.TemplateResponse(
+            request=request,
+            name="coffees.html",
+            context={"coffees": coffees, "admin": admin},
+        )
+
     if not admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -185,7 +194,13 @@ def update_coffee_action(
 
 
 @app.post("/coffees/{id}/buy")
-def buy_coffee(session: SessionDep, id: int, admin: int = 0):
+def buy_coffee(
+    request: Request,
+    session: SessionDep,
+    id: int,
+    hx_request: Annotated[Union[str, None], Header()] = None,
+    admin: int = 0,
+):
     if admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -201,10 +216,23 @@ def buy_coffee(session: SessionDep, id: int, admin: int = 0):
     new_money = money - coffee_db.price
 
     if new_money < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Not enough money for that coffee! We can offer a glass of water instead...",
-        )
+        message = "Not enough money! We can offer a glass of water instead... 🚰"
+
+        if hx_request:
+            coffees = session.exec(select(Coffee)).all()
+
+            return templates.TemplateResponse(
+                request,
+                "index.html",
+                context={
+                    "money": money,
+                    "admin": admin,
+                    "coffees": coffees,
+                    "message": message,
+                },
+            )
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
 
     new_quantity = coffee_db.quantity - 1
 
@@ -221,4 +249,24 @@ def buy_coffee(session: SessionDep, id: int, admin: int = 0):
     session.commit()
     session.refresh(coffee_db)
 
-    return RedirectResponse(f"/?purchased_coffee_id={id}", status_code=303)
+    message = f"<strong>Enjoy your {coffee_db.name}! ☺️</strong>"
+
+    if hx_request:
+        # data to update the menu
+        coffees = session.exec(select(Coffee)).all()
+
+        # data to update the money
+        money = get_money()
+
+        return templates.TemplateResponse(
+            request,
+            "index.html",
+            context={
+                "money": get_money(),
+                "admin": admin,
+                "coffees": coffees,
+                "message": message,
+            },
+        )
+
+    return message
